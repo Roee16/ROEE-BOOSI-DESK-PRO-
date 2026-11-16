@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOOSI DESK PRO™ — Nostro, Prop Desk &amp; Hedge Fund Execution Cockpit</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Heebo', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#060911',
+            deskCard: '#0C1220',
+            amberDesk: '#F59E0B',
+            emeraldDesk: '#10B981',
+            crimsonDesk: '#EF4444',
+            cyanDesk: '#06B6D4'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #060911;
+      color: #F8FAFC;
+      font-family: 'Inter', 'Heebo', sans-serif;
+      overflow-x: hidden;
+    }
+    .desk-panel {
+      background: linear-gradient(155deg, rgba(12, 18, 32, 0.96) 0%, rgba(8, 12, 22, 0.98) 100%);
+      border: 1px solid rgba(51, 65, 85, 0.55);
+      box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.7);
+    }
+    .desk-panel-gold {
+      background: linear-gradient(155deg, rgba(22, 20, 32, 0.96) 0%, rgba(12, 14, 24, 0.98) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      box-shadow: 0 12px 32px -12px rgba(245, 158, 11, 0.14);
+    }
+    .grid-backdrop {
+      background-image: linear-gradient(to right, rgba(30, 41, 59, 0.18) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(30, 41, 59, 0.18) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #060911;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    input[type="range"] {
+      accent-color: #06B6D4;
+    }
+  </style>
+</head>
+<body class="min-h-screen grid-backdrop text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- Top Live Desk Telemetry Tape (Auto-Updates Every 3s) -->
+  <div class="w-full bg-slate-950/95 border-b border-slate-800/80 px-3 py-1.5 text-xs font-mono flex items-center justify-between gap-4 overflow-x-auto custom-scrollbar">
+    <div class="flex items-center gap-5 shrink-0" id="deskTickerTape"></div>
+    <div class="flex items-center gap-3 shrink-0">
+      <span class="inline-flex items-center gap-1.5 text-emerald-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span id="deskStreamStatus">DESK FEED: LIVE AUTO-SYNC (3s)</span>
+      </span>
+      <span class="text-slate-600">|</span>
+      <span class="text-slate-400" id="deskClock">00:00:00</span>
+      <span class="text-slate-600">|</span>
+      <a href="https://www.researchgate.net/profile/Roee-Boosi" target="_blank" rel="noopener noreferrer" class="text-cyan-400 hover:text-cyan-300 underline decoration-cyan-500/40">
+        Roee Boosi ResearchGate
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-xl bg-obsidian/90 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-amber-400 to-emerald-500 p-0.5 shadow-lg shadow-cyan-500/20">
+          <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-mono font-extrabold text-base text-cyan-300">
+            BD
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h1 class="font-bold text-base sm:text-lg tracking-tight text-white" id="deskBrandTitle">
+              BOOSI DESK PRO™ <span class="text-amber-400 font-mono text-xs px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">NOSTRO &amp; PROP TERMINAL</span>
+            </h1>
+            <span class="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+              SA-DRO • CYCLEX • PRISM • PDE-RL
+            </span>
+          </div>
+          <p class="text-xs text-slate-400" id="deskBrandSubtitle">
+            Institutional Execution, Technical Microstructure &amp; Risk Cockpit • Research by Roee Boosi
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="deskPauseBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-mono bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 transition">
+          ⏸ Live Sync ON
+        </button>
+        <button id="deskLangBtn" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          🌐 עברית / EN
+        </button>
+        <button id="openDeskLicenseModalBtn" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 transition shadow-md shadow-amber-500/20">
+          🏛️ Desk License &amp; API
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 border-t border-slate-800/50">
+      <nav class="flex items-center gap-1 overflow-x-auto py-1.5 custom-scrollbar" aria-label="Desk Navigation">
+        <button type="button" data-tab="cockpit" class="desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+          1. Technical &amp; CYCLEX Execution Cockpit
+        </button>
+        <button type="button" data-tab="risk" class="desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          2. Nostro Risk &amp; SA-DRO Position Sizer
+        </button>
+        <button type="button" data-tab="slicer" class="desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          3. Optimal VWAP / PDE-RL Block Slicer
+        </button>
+        <button type="button" data-tab="journal" class="desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          4. Nostro Signals &amp; Performance Ledger
+        </button>
+        <button type="button" data-tab="smartmoney" class="desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent">
+          5. Buffett Value, 13F Hedge Funds, Crowd &amp; Trump Signal™
+        </button>
+        <button type="button" data-tab="commercial" class="desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30">
+          6. 💎 Commercial Desk ROI &amp; Institutional Plans
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- ==========================================
+         TAB 1: TECHNICAL & CYCLEX EXECUTION COCKPIT
+         ========================================== -->
+    <section id="tab-cockpit" class="desk-panel-container space-y-6">
+      <!-- Instrument Selector & Timeframe Bar -->
+      <div class="desk-panel rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-mono uppercase text-slate-400 mr-1">Desk Instrument:</span>
+          <div id="deskInstrumentButtons" class="flex items-center gap-1.5 flex-wrap"></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-mono text-slate-400">Timeframe:</span>
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 font-mono text-xs" id="timeframeBtns">
+            <button type="button" data-tf="5m" class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white">5m</button>
+            <button type="button" data-tf="15m" class="tf-btn px-2.5 py-1 rounded bg-cyan-500 text-slate-950 font-bold">15m</button>
+            <button type="button" data-tf="1H" class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white">1H</button>
+            <button type="button" data-tf="1D" class="tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white">1D</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6-Card Technical + Boosi Quantitative Readout Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-mono">
+        <div class="desk-panel rounded-xl p-3.5 border-t-2 border-t-cyan-400">
+          <span class="text-[10px] text-slate-400 uppercase block">Live Spot / VWAP</span>
+          <span class="text-lg font-extrabold text-white" id="indSpotPrice">$142.80</span>
+          <span class="text-[11px] text-cyan-300 block mt-0.5" id="indVwapSpread">VWAP: $143.45 (-0.45%)</span>
+        </div>
+        <div class="desk-panel rounded-xl p-3.5 border-t-2 border-t-amber-400">
+          <span class="text-[10px] text-slate-400 uppercase block">RSI (14) &amp; Bollinger</span>
+          <span class="text-lg font-extrabold text-amber-300" id="indRsiVal">31.4 (Oversold)</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5" id="indBbStatus">Lower Band -2.1σ Test</span>
+        </div>
+        <div class="desk-panel rounded-xl p-3.5 border-t-2 border-t-emerald-400">
+          <span class="text-[10px] text-slate-400 uppercase block">MACD &amp; PRISM Fusion</span>
+          <span class="text-lg font-extrabold text-emerald-400" id="indPrismScore">+0.78 Bullish</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5" id="indMacdHist">Histogram Turning +</span>
+        </div>
+        <div class="desk-panel rounded-xl p-3.5 border-t-2 border-t-violet-400">
+          <span class="text-[10px] text-slate-400 uppercase block">GEX (Net Gamma)</span>
+          <span class="text-lg font-extrabold text-violet-300" id="indGexVal">+$420M (Pin)</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5" id="indZeroGamma">Zero-Gamma: $139.50</span>
+        </div>
+        <div class="desk-panel rounded-xl p-3.5 border-t-2 border-t-rose-400">
+          <span class="text-[10px] text-slate-400 uppercase block">ATR (14) Volatility</span>
+          <span class="text-lg font-extrabold text-white" id="indAtrVal">$4.15 (2.9%)</span>
+          <span class="text-[11px] text-slate-400 block mt-0.5" id="indStopDist">1.5x ATR Stop: $6.22</span>
+        </div>
+        <div class="desk-panel-gold rounded-xl p-3.5 border-t-2 border-t-amber-400">
+          <span class="text-[10px] text-amber-300 uppercase block">Boosi Q-EWSS Δ</span>
+          <span class="text-lg font-extrabold text-emerald-400" id="indBoosiDelta">+64 pts (BUY)</span>
+          <span class="text-[11px] text-amber-200 block mt-0.5" id="indCyclexPhase">CYCLEX: Spring Phase C</span>
+        </div>
+      </div>
+
+      <!-- Main Price + VWAP + Bollinger Chart & Desk Decision Box -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 desk-panel rounded-2xl p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="font-bold text-base text-white" id="cockpitChartTitle">
+                NVDA — Price Action, Institutional VWAP, Bollinger Bands (±2σ) &amp; CYCLEX Phase
+              </h2>
+              <p class="text-xs text-slate-400">Live intraday structure combining classical technical levels with Roee Boosi's Wavelet-Wyckoff detection</p>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] font-mono">
+              <span class="text-white">● Price</span>
+              <span class="text-amber-400">— VWAP</span>
+              <span class="text-cyan-400">-- BB Upper/Lower</span>
+            </div>
+          </div>
+          <div class="relative h-80 w-full">
+            <canvas id="cockpitPriceChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Right: Desk Actionable Execution Ticket (4 cols) -->
+        <div class="lg:col-span-4 desk-panel-gold rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <span class="text-xs font-mono uppercase text-amber-400 font-bold">Desk Decision Engine</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[11px] font-bold" id="ticketConvictionBadge">91% CONFIDENCE</span>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <span class="text-[11px] font-mono text-slate-400">VERDICT (PRISM + CYCLEX + Q-EWSS):</span>
+              <div class="text-lg font-extrabold font-mono text-emerald-400" id="ticketVerdict">
+                LONG ACCUMULATION (BUY DIP)
+              </div>
+              <p class="text-xs text-slate-300 leading-relaxed" id="ticketRationale">
+                Price is testing -2.1σ Bollinger support below VWAP while Q-EWSS expert conviction (+88) strongly diverges from retail fear (24).
+              </p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <span class="text-[10px] text-slate-400 block">Optimal Entry</span>
+                <span class="font-bold text-white" id="ticketEntry">$142.40</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <span class="text-[10px] text-rose-400 block">ATR Stop Loss</span>
+                <span class="font-bold text-rose-400" id="ticketStop">$136.18</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <span class="text-[10px] text-emerald-400 block">Target (2.8R)</span>
+                <span class="font-bold text-emerald-400" id="ticketTarget">$159.80</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t border-slate-800">
+            <button id="sendTicketToRiskSizerBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+              ⚖️ Calculate Nostro Position Size for This Setup →
+            </button>
+            <button id="logTicketToJournalBtn" type="button" class="w-full py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 font-semibold text-xs transition">
+              📒 Log Trade Setup to Nostro Ledger
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 2: NOSTRO RISK & SA-DRO POSITION SIZER
+         ========================================== -->
+    <section id="tab-risk" class="desk-panel-container hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 desk-panel-gold rounded-2xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-xs font-mono uppercase text-amber-400">Based on Roee Boosi's SA-DRO (Jun 2026) &amp; EEQAM</span>
+            <h2 class="text-lg font-bold text-white mt-0.5">Nostro &amp; Prop Desk Survivor-Aware Position Sizer</h2>
+            <p class="text-xs text-slate-300 mt-1">
+              Prevents desk blowups and daily drawdown breaches by constraining Kelly sizing with Wasserstein tail-risk bounds.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+            <div>
+              <label for="riskAccountSize" class="block text-slate-400 mb-1">Nostro / Pod Capital ($)</label>
+              <input id="riskAccountSize" type="number" value="1000000" step="50000" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white" />
+            </div>
+            <div>
+              <label for="riskPerTradePct" class="block text-slate-400 mb-1">Max Risk Per Trade (%)</label>
+              <input id="riskPerTradePct" type="number" value="0.75" step="0.1" min="0.1" max="5" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white" />
+            </div>
+            <div>
+              <label for="riskDailyLimitPct" class="block text-slate-400 mb-1">Desk Daily DD Limit (%)</label>
+              <input id="riskDailyLimitPct" type="number" value="2.50" step="0.25" min="0.5" max="10" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white" />
+            </div>
+            <div>
+              <label for="riskEntryPrice" class="block text-slate-400 mb-1">Entry Price ($)</label>
+              <input id="riskEntryPrice" type="number" value="142.40" step="0.1" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white" />
+            </div>
+            <div>
+              <label for="riskStopPrice" class="block text-slate-400 mb-1">Stop Loss Price ($)</label>
+              <input id="riskStopPrice" type="number" value="136.18" step="0.1" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white" />
+            </div>
+            <div>
+              <label for="riskTargetPrice" class="block text-slate-400 mb-1">Take Profit Target ($)</label>
+              <input id="riskTargetPrice" type="number" value="159.80" step="0.1" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white" />
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs">
+              <label for="riskSadroSlider" class="text-slate-300 font-medium">SA-DRO Tail-Ambiguity Conservatism ($\epsilon_W$)</label>
+              <span id="valRiskSadro" class="font-mono text-violet-400 font-bold">0.040</span>
+            </div>
+            <input id="riskSadroSlider" type="range" min="10" max="100" value="40" class="w-full" />
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
+            <div class="desk-panel rounded-2xl p-4 border-l-4 border-l-emerald-400">
+              <span class="text-[11px] text-slate-400 uppercase block">SA-DRO Optimal Shares</span>
+              <span class="text-2xl font-extrabold text-emerald-400 mt-1 block" id="outOptimalShares">1,012 sh</span>
+              <span class="text-xs text-slate-300 mt-1 block" id="outNotionalExposure">Notional: $144,108 (14.4%)</span>
+            </div>
+            <div class="desk-panel rounded-2xl p-4 border-l-4 border-l-amber-400">
+              <span class="text-[11px] text-slate-400 uppercase block">Risk / Reward &amp; Dollar Risk</span>
+              <span class="text-2xl font-extrabold text-amber-300 mt-1 block" id="outRiskReward">2.80 R</span>
+              <span class="text-xs text-slate-300 mt-1 block" id="outDollarRisk">Max Loss: $6,294 (0.63%)</span>
+            </div>
+            <div class="desk-panel rounded-2xl p-4 border-l-4 border-l-violet-400">
+              <span class="text-[11px] text-slate-400 uppercase block">Ruin / DD Breach Prob</span>
+              <span class="text-2xl font-extrabold text-violet-300 mt-1 block" id="outRuinProb">0.18%</span>
+              <span class="text-xs text-emerald-400 mt-1 block" id="outDeskClearance">✓ WITHIN NOSTRO LIMITS</span>
+            </div>
+          </div>
+
+          <div class="desk-panel rounded-2xl p-5">
+            <h3 class="font-bold text-sm text-white mb-2">SA-DRO Tail-Risk Distribution vs. Unconstrained Kelly Sizing</h3>
+            <p class="text-xs text-slate-400 mb-3">Shows how Roee Boosi's Survivor-Aware constraint truncates left-tail drawdown risk across 1,000 simulated market shocks</p>
+            <div class="relative h-64 w-full">
+              <canvas id="riskDistributionChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 3: OPTIMAL VWAP / PDE-RL BLOCK SLICER
+         ========================================== -->
+    <section id="tab-slicer" class="desk-panel-container hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-4 desk-panel rounded-2xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-xs font-mono uppercase text-cyan-400">Agentic PDE-RL Institutional Execution</span>
+            <h2 class="text-lg font-bold text-white mt-0.5">Block Order TWAP / VWAP Slicer</h2>
+            <p class="text-xs text-slate-400 mt-1">Minimize market impact &amp; information leakage when executing large institutional clips.</p>
+          </div>
+
+          <div class="space-y-3 text-xs font-mono">
+            <div>
+              <label for="slicerOrderShares" class="flex justify-between text-slate-300 mb-1">
+                <span>Parent Order Size (Shares)</span>
+                <span id="valSlicerShares" class="text-cyan-300 font-bold">150,000 sh</span>
+              </label>
+              <input id="slicerOrderShares" type="range" min="10000" max="500000" step="10000" value="150000" class="w-full" />
+            </div>
+            <div>
+              <label for="slicerHorizonMins" class="flex justify-between text-slate-300 mb-1">
+                <span>Execution Horizon (Minutes)</span>
+                <span id="valSlicerHorizon" class="text-amber-300 font-bold">120 min</span>
+              </label>
+              <input id="slicerHorizonMins" type="range" min="30" max="390" step="30" value="120" class="w-full" />
+            </div>
+            <div>
+              <label for="slicerToxicity" class="flex justify-between text-slate-300 mb-1">
+                <span>Hawkes Order-Flow Toxicity</span>
+                <span id="valSlicerToxicity" class="text-rose-400 font-bold">0.62</span>
+              </label>
+              <input id="slicerToxicity" type="range" min="10" max="95" value="62" class="w-full" />
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2 font-mono text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Naive Market Sweep Slippage:</span>
+              <span class="text-rose-400 font-bold" id="outNaiveSlip">-18.4 bps</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Boosi PDE-RL Adaptive Slippage:</span>
+              <span class="text-emerald-400 font-bold" id="outPdeSlip">-5.1 bps</span>
+            </div>
+            <div class="flex justify-between border-t border-slate-800 pt-2">
+              <span class="text-amber-300">Net Execution Alpha Saved:</span>
+              <span class="text-amber-400 font-extrabold" id="outSlipSavings">+$28,450 (+13.3 bps)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-8 desk-panel rounded-2xl p-5 space-y-3">
+          <h3 class="font-bold text-base text-white">Adaptive Child-Order Schedule (Boosi PDE-RL vs. Static TWAP)</h3>
+          <p class="text-xs text-slate-400">Dynamically front-loads or delays child slices based on real-time CYCLEX liquidity pockets and Hawkes toxicity</p>
+          <div class="relative h-80 w-full">
+            <canvas id="slicerScheduleChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 4: DESK TRADE SIGNALS & NOSTRO LEDGER
+         ========================================== -->
+    <section id="tab-journal" class="desk-panel-container hidden space-y-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono">
+        <div class="desk-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Desk Net PnL (MTD)</span>
+          <span class="text-2xl font-extrabold text-emerald-400" id="ledgerNetPnl">+$48,920</span>
+        </div>
+        <div class="desk-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Win Rate</span>
+          <span class="text-2xl font-extrabold text-cyan-300" id="ledgerWinRate">68.4%</span>
+        </div>
+        <div class="desk-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Profit Factor</span>
+          <span class="text-2xl font-extrabold text-amber-300" id="ledgerProfitFactor">2.46</span>
+        </div>
+        <div class="desk-panel rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase block">Realized Sharpe (Ann.)</span>
+          <span class="text-2xl font-extrabold text-white" id="ledgerSharpe">2.91</span>
+        </div>
+      </div>
+
+      <div class="desk-panel rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="font-bold text-base text-white">Nostro Desk Execution Ledger &amp; Active Trade Setups</h3>
+            <p class="text-xs text-slate-400">Track every trade executed using The Boosi Method (Q-EWSS, CYCLEX, PRISM, SA-DRO)</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left border-collapse text-xs font-mono">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                <th class="py-2.5 px-3">Date / Time</th>
+                <th class="py-2.5 px-3">Ticker</th>
+                <th class="py-2.5 px-3">Side</th>
+                <th class="py-2.5 px-3">Engine Signal</th>
+                <th class="py-2.5 px-3">Entry</th>
+                <th class="py-2.5 px-3">Stop / Target</th>
+                <th class="py-2.5 px-3">Size</th>
+                <th class="py-2.5 px-3">Status / PnL</th>
+              </tr>
+            </thead>
+            <tbody id="nostroLedgerBody" class="divide-y divide-slate-800/70"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==========================================
+         TAB 5: BUFFETT VALUE, 13F HEDGE FUNDS, CROWD VS EXPERTS & TRUMP SIGNAL
+         ========================================== -->
+    <section id="tab-smartmoney" class="desk-panel-container hidden space-y-6">
+      <!-- Top Row: Wisdom of Crowd vs Experts + Breaking News Wire + Trump Signal -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Wisdom of the Crowd vs Expert Leaders + Breaking News (6 cols) -->
+        <div class="lg:col-span-6 desk-panel rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <span class="text-xs font-mono uppercase text-cyan-400">Roee Boosi: Crowd Wisdom vs. Expert Signal Supremacy</span>
+              <h2 class="text-base sm:text-lg font-bold text-white">Wisdom of the Crowd vs. Top Market Leaders &amp; Breaking News</h2>
+            </div>
+            <span class="px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono text-xs" id="smActiveTickerBadge">NVDA</span>
+          </div>
+
+          <!-- Dual Sentiment Meter -->
+          <div class="grid grid-cols-2 gap-3 font-mono text-xs">
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-[10px] text-slate-400 block">WISDOM OF THE CROWD (RETAIL)</span>
+              <span class="text-xl font-extrabold text-rose-400" id="smCrowdScore">24 / 100</span>
+              <span class="text-[11px] text-slate-400 block mt-0.5">Social Fear &amp; Options Panic</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-emerald-500/30">
+              <span class="text-[10px] text-emerald-400 block">EXPERT &amp; OPINION LEADERS (Q-EWSS)</span>
+              <span class="text-xl font-extrabold text-emerald-400" id="smExpertScore">88 / 100</span>
+              <span class="text-[11px] text-slate-400 block mt-0.5">Accuracy-Weighted Conviction</span>
+            </div>
+          </div>
+
+          <!-- Breaking News Wire -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-mono text-amber-400">
+              <span>⚡ LIVE BREAKING NEWS &amp; MACRO CATALYST WIRE</span>
+              <span class="text-emerald-400">● Auto-Synced</span>
+            </div>
+            <div id="smBreakingNewsList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar text-xs"></div>
+          </div>
+        </div>
+
+        <!-- Right: The Trump Market Signal™ Live Desk Matrix (6 cols) -->
+        <div class="lg:col-span-6 desk-panel-gold rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <span class="text-xs font-mono uppercase text-amber-400">Based on Roee Boosi &amp; The Trump Market Signal (2024–2026)</span>
+              <h2 class="text-base sm:text-lg font-bold text-white">The Trump Market Signal™ — Policy &amp; Rhetoric Impulse</h2>
+            </div>
+            <span class="px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-xs">REAL-TIME NLP</span>
+          </div>
+          <p class="text-xs text-slate-300">
+            Select a presidential rhetoric or policy catalyst to compute immediate sector rotation weights for your Nostro or Hedge Fund book:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="smTrumpButtons"></div>
+          <div class="relative h-56 w-full">
+            <canvas id="smTrumpChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Warren Buffett Value-Quality Style + 13F Hedge Fund Replication -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Warren Buffett Style + Boosi Quantitative Value Fusion (6 cols) -->
+        <div class="lg:col-span-6 desk-panel rounded-2xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-xs font-mono uppercase text-amber-400">Roee Boosi: Post-Buffett Strategic Value + AI Quant Synthesis</span>
+            <h3 class="text-base sm:text-lg font-bold text-white">Warren Buffett Style™ — Moat, FCF Yield &amp; Margin of Safety Screener</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Combines traditional Berkshire-style intrinsic value metrics with Boosi PDE-RL timing</p>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse text-xs font-mono">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2 px-2">Ticker</th>
+                  <th class="py-2 px-2">ROIC</th>
+                  <th class="py-2 px-2">FCF Yield</th>
+                  <th class="py-2 px-2">Moat Score</th>
+                  <th class="py-2 px-2">Boosi + Buffett Verdict</th>
+                </tr>
+              </thead>
+              <tbody id="buffettTableBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Hedge Fund 13F Portfolio Replication & Imitation Tracker (6 cols) -->
+        <div class="lg:col-span-6 desk-panel rounded-2xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-xs font-mono uppercase text-emerald-400">Institutional 13F Consensus &amp; Smart-Money Imitation</span>
+            <h3 class="text-base sm:text-lg font-bold text-white">Top Hedge Fund Portfolio Allocations &amp; Net Institutional Flow</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Track where elite multi-manager pods and macro funds are rotating capital</p>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse text-xs font-mono">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2 px-2">Hedge Fund / Pod Style</th>
+                  <th class="py-2 px-2">Top Overweight</th>
+                  <th class="py-2 px-2">Q/Q Shift</th>
+                  <th class="py-2 px-2">Boosi Alignment</th>
+                </tr>
+              </thead>
+              <tbody id="hedgeFund13fBody" class="divide-y divide-slate-800/70"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         TAB 6: COMMERCIAL DESK ROI & INSTITUTIONAL PLANS
+         ========================================== -->
+    <section id="tab-commercial" class="desk-panel-container hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Commercial Desk Alpha & Slippage Savings Calculator (5 cols) -->
+        <div class="lg:col-span-5 desk-panel-gold rounded-2xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <span class="text-xs font-mono uppercase text-amber-400">Commercial Institutional Value</span>
+            <h2 class="text-lg font-bold text-white mt-0.5">Desk &amp; Hedge Fund Net Alpha ROI Calculator</h2>
+            <p class="text-xs text-slate-300 mt-1">
+              Quantify the annual dollar return generated by equipping your traders with BOOSI DESK PRO™ (SA-DRO tail protection + PDE-RL execution + Q-EWSS signals):
+            </p>
+          </div>
+
+          <div class="space-y-3 text-xs font-mono">
+            <div>
+              <div class="flex justify-between mb-1">
+                <span>Desk / Fund AUM ($ Millions)</span>
+                <span id="valCommAum" class="text-amber-300 font-bold">$50M AUM</span>
+              </div>
+              <input id="sliderCommAum" type="range" min="1" max="500" step="1" value="50" class="w-full" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span>Number of Desk Traders / PMs</span>
+                <span id="valCommSeats" class="text-cyan-300 font-bold">10 Seats</span>
+              </div>
+              <input id="sliderCommSeats" type="range" min="1" max="50" step="1" value="10" class="w-full" />
+            </div>
+            <div>
+              <div class="flex justify-between mb-1">
+                <span>Conservative Annual Alpha + Slippage Saved (bps)</span>
+                <span id="valCommBps" class="text-emerald-400 font-bold">+140 bps/yr</span>
+              </div>
+              <input id="sliderCommBps" type="range" min="25" max="400" step="5" value="140" class="w-full" />
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-950 border border-amber-500/40 space-y-2 font-mono text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Projected Gross Desk Value Added:</span>
+              <span class="text-emerald-400 font-extrabold text-base" id="outCommGrossValue">+$700,000 / yr</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">BOOSI DESK PRO™ Annual License:</span>
+              <span class="text-white font-bold" id="outCommLicenseCost">$17,880 / yr</span>
+            </div>
+            <div class="flex justify-between border-t border-slate-800 pt-2">
+              <span class="text-amber-300">Net Institutional ROI Multiple:</span>
+              <span class="text-amber-400 font-extrabold text-base" id="outCommRoiMult">39.1x ROI</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Commercial Subscription Tiers (7 cols) -->
+        <div class="lg:col-span-7 desk-panel rounded-2xl p-5 space-y-4">
+          <h3 class="text-lg font-bold text-white">Commercial Licensing Tiers — Traders, Nostro Desks &amp; Hedge Funds</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300">INDIVIDUAL PRO</span>
+                <div class="font-bold text-base text-white">Pro Trader Seat</div>
+                <div class="text-2xl font-extrabold font-mono text-cyan-300">$199<span class="text-xs text-slate-400">/mo</span></div>
+                <ul class="space-y-1.5 text-slate-300 pt-2">
+                  <li>✓ Full Technical + CYCLEX Cockpit</li>
+                  <li>✓ SA-DRO Position Sizer &amp; Ledger</li>
+                  <li>✓ Buffett Value &amp; 13F Smart-Money</li>
+                  <li>✓ Trump Signal™ &amp; Breaking Wire</li>
+                </ul>
+              </div>
+              <button type="button" class="comm-plan-btn w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold transition">Activate Pro Seat</button>
+            </div>
+
+            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-400 flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold">MOST POPULAR DESK</span>
+                <div class="font-bold text-base text-white">Nostro / Prop Pod (10 Seats)</div>
+                <div class="text-2xl font-extrabold font-mono text-amber-300">$1,490<span class="text-xs text-slate-400">/mo</span></div>
+                <ul class="space-y-1.5 text-slate-200 pt-2">
+                  <li>✓ 10 Synchronized Trader Terminals</li>
+                  <li>✓ Real-Time PDE-RL Block Slicer</li>
+                  <li>✓ Desk Daily Drawdown Guardrails</li>
+                  <li>✓ Live Telegram &amp; Slack Desk Alerts</li>
+                </ul>
+              </div>
+              <button type="button" class="comm-plan-btn w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition">Deploy Nostro Pod</button>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-950 border border-emerald-500/40 flex flex-col justify-between space-y-4">
+              <div class="space-y-2">
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300">HEDGE FUND</span>
+                <div class="font-bold text-base text-white">Enterprise + API Feed</div>
+                <div class="text-2xl font-extrabold font-mono text-emerald-400">$2,490<span class="text-xs text-slate-400">/mo</span></div>
+                <ul class="space-y-1.5 text-slate-300 pt-2">
+                  <li>✓ Unlimited Multi-PM Desk Seats</li>
+                  <li>✓ FIX / WebSocket / Python SDK</li>
+                  <li>✓ Custom SA-DRO &amp; Q-EWSS Calibration</li>
+                  <li>✓ Executive Advisory by Roee Boosi</li>
+                </ul>
+              </div>
+              <button type="button" class="comm-plan-btn w-full py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold transition">Request Enterprise API</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Institutional Desk Licensing Modal -->
+  <div id="deskLicenseModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="desk-panel-gold rounded-2xl max-w-lg w-full p-6 space-y-4 border border-amber-500/40">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <span class="text-xs font-mono uppercase text-amber-400">BOOSI DESK PRO™ • Institutional Access</span>
+          <h3 class="text-lg font-bold text-white">Request Trading Desk / Nostro Seat License</h3>
+        </div>
+        <button id="closeDeskLicenseModalBtn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono">
+          ✕ Close
+        </button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label for="deskLicOrg" class="block text-slate-300 mb-1">Trading Desk / Fund / Prop Firm</label>
+          <input id="deskLicOrg" type="text" placeholder="e.g. Alpha Nostro Desk" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white font-mono" />
+        </div>
+        <div>
+          <label for="deskLicEmail" class="block text-slate-300 mb-1">Head of Desk Email</label>
+          <input id="deskLicEmail" type="email" placeholder="desk@fund.com" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white font-mono" />
+        </div>
+        <div>
+          <label for="deskLicTier" class="block text-slate-300 mb-1">License Tier</label>
+          <select id="deskLicTier" class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-white font-mono">
+            <option>Single Trader Pro Seat ($199/mo)</option>
+            <option selected>Nostro / Prop Desk 10-Seat Pod ($1,490/mo)</option>
+            <option>Hedge Fund Enterprise + FIX/WebSocket API ($2,490/mo)</option>
+          </select>
+        </div>
+        <button id="submitDeskLicenseBtn" type="button" class="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition">
+          Submit Institutional Request →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="deskToast" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl bg-slate-900 border border-cyan-400/60 text-white text-xs font-mono shadow-2xl">
+    <span id="deskToastText">Updated!</span>
+  </div>
+
+  <footer class="max-w-7xl mx-auto px-4 py-6 mt-8 border-t border-slate-800/80 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div>© 2026 <strong>BOOSI DESK PRO™</strong> • Quantitative Architecture by <a href="https://www.researchgate.net/profile/Roee-Boosi" target="_blank" rel="noopener noreferrer" class="text-cyan-400 underline">Roee Boosi</a>.</div>
+    <div class="font-mono text-emerald-400">🔒 Institutional Nostro &amp; Prop Execution Edition</div>
+  </footer>
+
+  <script>
+    const DESK_STATE = {
+      lang: 'en',
+      activeTab: 'cockpit',
+      selectedSymbol: 'NVDA',
+      timeframe: '15m',
+      liveRunning: true
+    };
+
+    const DESK_INSTRUMENTS = {
+      NVDA: { name: 'NVIDIA Corp.', price: 142.80, vwap: 143.45, rsi: 31.4, atr: 4.15, gex: '+$420M', zeroG: 139.50, boosiDelta: 64, phase: 'CYCLEX: Spring Phase C', prism: '+0.78 Bullish', isCrypto: false },
+      SPY:  { name: 'S&P 500 ETF', price: 586.20, vwap: 587.10, rsi: 36.2, atr: 6.40, gex: '+$1.8B', zeroG: 582.00, boosiDelta: 58, phase: 'CYCLEX: Accumulation Test', prism: '+0.65 Bullish', isCrypto: false },
+      QQQ:  { name: 'Nasdaq 100 ETF', price: 504.60, vwap: 506.05, rsi: 34.8, atr: 7.20, gex: '+$910M', zeroG: 499.50, boosiDelta: 61, phase: 'CYCLEX: Phase C Shakeout', prism: '+0.72 Bullish', isCrypto: false },
+      TSLA: { name: 'Tesla Inc.', price: 312.40, vwap: 316.20, rsi: 28.9, atr: 12.80, gex: '-$210M', zeroG: 318.00, boosiDelta: 58, phase: 'CYCLEX: Selling Climax', prism: '+0.54 Reversal', isCrypto: false },
+      BTC:  { name: 'Bitcoin Spot', price: 91450.00, vwap: 92100.00, rsi: 38.5, atr: 2450.00, gex: 'N/A (Perp)', zeroG: 89500.00, boosiDelta: 59, phase: 'CYCLEX: Absorption', prism: '+0.81 Bullish', isCrypto: true },
+      ETH:  { name: 'Ethereum Spot', price: 3140.00, vwap: 3175.00, rsi: 35.1, atr: 112.00, gex: 'N/A (Perp)', zeroG: 3050.00, boosiDelta: 57, phase: 'CYCLEX: Support Test', prism: '+0.69 Bullish', isCrypto: true }
+    };
+
+    const NOSTRO_LEDGER = [
+      { time: 'Today 14:15', ticker: 'NVDA', side: 'LONG', engine: 'Q-EWSS + CYCLEX Spring', entry: '$142.40', stopTarget: '$136.18 / $159.80', size: '1,012 sh', status: 'OPEN (+$1,420)', win: true },
+      { time: 'Today 11:30', ticker: 'SPY',  side: 'LONG', engine: 'PDE-RL Dip Absorption', entry: '$584.90', stopTarget: '$578.50 / $594.00', size: '450 sh', status: 'CLOSED (+$4,095)', win: true },
+      { time: 'Yesterday',   ticker: 'BTC',  side: 'LONG', engine: 'SA-DRO + Trump Signal', entry: '$89,800', stopTarget: '$87,400 / $94,500', size: '1.8 BTC', status: 'CLOSED (+$8,460)', win: true },
+      { time: '2 Days Ago',  ticker: 'TSLA', side: 'SHORT', engine: 'PRISM Momentum Fade', entry: '$326.50', stopTarget: '$334.00 / $314.00', size: '350 sh', status: 'STOPPED (-$2,625)', win: false }
+    ];
+
+    let cockpitChart = null;
+    let riskDistChart = null;
+    let slicerChart = null;
+
+    function showDeskToast(msg) {
+      const el = document.getElementById('deskToast');
+      const txt = document.getElementById('deskToastText');
+      if (!el || !txt) return;
+      txt.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 3000);
+    }
+
+    function fmtP(val) {
+      return val >= 1000
+        ? '$' + val.toLocaleString(undefined, { maximumFractionDigits: 0 })
+        : '$' + val.toFixed(2);
+    }
+
+    async function syncLiveCrypto() {
+      try {
+        const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT"]');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            data.forEach(d => {
+              if (d.symbol === 'BTCUSDT') DESK_INSTRUMENTS.BTC.price = parseFloat(d.lastPrice) || DESK_INSTRUMENTS.BTC.price;
+              if (d.symbol === 'ETHUSDT') DESK_INSTRUMENTS.ETH.price = parseFloat(d.lastPrice) || DESK_INSTRUMENTS.ETH.price;
+            });
+          }
+        }
+      } catch (e) {}
+    }
+
+    function renderDeskTapeAndButtons() {
+      const tape = document.getElementById('deskTickerTape');
+      if (tape) {
+        tape.innerHTML = Object.keys(DESK_INSTRUMENTS).map(sym => {
+          const d = DESK_INSTRUMENTS[sym];
+          return `
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-white">${sym}</span>
+              <span class="text-cyan-300">${fmtP(d.price)}</span>
+              <span class="text-amber-400">[RSI:${d.rsi.toFixed(1)}]</span>
+              <span class="text-emerald-400">[Δ:+${d.boosiDelta}]</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const btns = document.getElementById('deskInstrumentButtons');
+      if (btns) {
+        btns.innerHTML = Object.keys(DESK_INSTRUMENTS).map(sym => {
+          const active = DESK_STATE.selectedSymbol === sym;
+          const cls = active
+            ? 'bg-amber-500 text-slate-950 font-bold border-amber-400'
+            : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700';
+          return `
+            <button type="button" data-sym="${sym}" class="desk-inst-btn px-3 py-1.5 rounded-lg text-xs font-mono border transition ${cls}">
+              ${sym} ${fmtP(DESK_INSTRUMENTS[sym].price)}
+            </button>
+          `;
+        }).join('');
+
+        btns.querySelectorAll('.desk-inst-btn').forEach(b => {
+          b.addEventListener('click', () => {
+            const s = b.getAttribute('data-sym');
+            if (s && DESK_INSTRUMENTS[s]) {
+              DESK_STATE.selectedSymbol = s;
+              renderDeskTapeAndButtons();
+              updateCockpitView();
+            }
+          });
+        });
+      }
+    }
+
+    function updateCockpitView() {
+      const d = DESK_INSTRUMENTS[DESK_STATE.selectedSymbol] || DESK_INSTRUMENTS.NVDA;
+      const vwapDiffPct = (((d.price - d.vwap) / d.vwap) * 100).toFixed(2);
+      const stopDist = (d.atr * 1.5).toFixed(d.price >= 1000 ? 0 : 2);
+      const stopPrice = (d.price - Number(stopDist)).toFixed(d.price >= 1000 ? 0 : 2);
+      const targetPrice = (d.price + Number(stopDist) * 2.8).toFixed(d.price >= 1000 ? 0 : 2);
+
+      document.getElementById('indSpotPrice').textContent = fmtP(d.price);
+      document.getElementById('indVwapSpread').textContent = `VWAP: ${fmtP(d.vwap)} (${vwapDiffPct}%)`;
+      document.getElementById('indRsiVal').textContent = `${d.rsi.toFixed(1)} (${d.rsi < 35 ? 'Oversold' : d.rsi > 70 ? 'Overbought' : 'Neutral'})`;
+      document.getElementById('indPrismScore').textContent = d.prism;
+      document.getElementById('indGexVal').textContent = d.gex;
+      document.getElementById('indZeroGamma').textContent = `Zero-Gamma: ${fmtP(d.zeroG)}`;
+      document.getElementById('indAtrVal').textContent = `${fmtP(d.atr)} (${((d.atr / d.price) * 100).toFixed(1)}%)`;
+      document.getElementById('indStopDist').textContent = `1.5x ATR Stop: ${fmtP(Number(stopDist))}`;
+      document.getElementById('indBoosiDelta').textContent = `+${d.boosiDelta} pts (BUY)`;
+      document.getElementById('indCyclexPhase').textContent = d.phase;
+
+      document.getElementById('cockpitChartTitle').textContent =
+        `${DESK_STATE.selectedSymbol} (${DESK_STATE.timeframe}) — Price Action, Institutional VWAP, Bollinger Bands (±2σ) & CYCLEX Phase`;
+
+      document.getElementById('ticketEntry').textContent = fmtP(d.price);
+      document.getElementById('ticketStop').textContent = fmtP(Number(stopPrice));
+      document.getElementById('ticketTarget').textContent = fmtP(Number(targetPrice));
+
+      // Generate realistic 24-bar technical series around live spot
+      const labels = Array.from({ length: 24 }, (_, i) => `T-${23 - i}`);
+      const prices = [];
+      const vwapLine = [];
+      const bbUpper = [];
+      const bbLower = [];
+      let cur = d.price * 1.035;
+      for (let i = 0; i < 24; i++) {
+        const drift = i < 16 ? -0.0025 : 0.0018;
+        cur = i === 23 ? d.price : cur * (1 + drift + (Math.sin(i * 0.9) * 0.004));
+        prices.push(Number(cur.toFixed(d.price >= 1000 ? 0 : 2)));
+        const vw = d.vwap * (1 + (12 - i) * 0.0005);
+        vwapLine.push(Number(vw.toFixed(d.price >= 1000 ? 0 : 2)));
+        bbUpper.push(Number((vw + d.atr * 1.3).toFixed(d.price >= 1000 ? 0 : 2)));
+        bbLower.push(Number((vw - d.atr * 1.3).toFixed(d.price >= 1000 ? 0 : 2)));
+      }
+
+      const ctx = document.getElementById('cockpitPriceChart');
+      if (ctx) {
+        if (cockpitChart) cockpitChart.destroy();
+        cockpitChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: `${DESK_STATE.selectedSymbol} Price`, data: prices, borderColor: '#F8FAFC', borderWidth: 2.5, tension: 0.25, pointRadius: 1.5 },
+              { label: 'Institutional VWAP', data: vwapLine, borderColor: '#F59E0B', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+              { label: 'Bollinger Upper (+2σ)', data: bbUpper, borderColor: '#06B6D4', borderDash: [5, 5], borderWidth: 1.2, pointRadius: 0 },
+              { label: 'Bollinger Lower (-2σ)', data: bbLower, borderColor: '#06B6D4', borderDash: [5, 5], borderWidth: 1.2, fill: '-1', backgroundColor: 'rgba(6, 182, 212, 0.06)', pointRadius: 0 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 200 },
+            plugins: { legend: { labels: { color: '#CBD5E1', font: { family: 'JetBrains Mono', size: 10 } } } },
+            scales: {
+              x: { ticks: { color: '#94A3B8', maxTicksLimit: 8 }, grid: { color: 'rgba(51, 65, 85, 0.25)' } },
+              y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(51, 65, 85, 0.25)' } }
+            }
+          }
+        });
+      }
+    }
+
+    function updateNostroRiskSizer() {
+      const cap = Number(document.getElementById('riskAccountSize').value) || 1000000;
+      const riskPct = Number(document.getElementById('riskPerTradePct').value) || 0.75;
+      const dailyLim = Number(document.getElementById('riskDailyLimitPct').value) || 2.5;
+      const entry = Number(document.getElementById('riskEntryPrice').value) || 142.40;
+      const stop = Number(document.getElementById('riskStopPrice').value) || 136.18;
+      const target = Number(document.getElementById('riskTargetPrice').value) || 159.80;
+      const sadroEps = Number(document.getElementById('riskSadroSlider').value) / 1000;
+
+      document.getElementById('valRiskSadro').textContent = sadroEps.toFixed(3);
+
+      const riskPerShare = Math.max(0.01, Math.abs(entry - stop));
+      const rewardPerShare = Math.abs(target - entry);
+      const rr = (rewardPerShare / riskPerShare).toFixed(2);
+
+      const rawDollarRisk = cap * (riskPct / 100);
+      const sadroHaircut = 1 / (1 + sadroEps * 4.5);
+      const adjustedDollarRisk = rawDollarRisk * sadroHaircut;
+      const shares = Math.max(1, Math.floor(adjustedDollarRisk / riskPerShare));
+      const notional = shares * entry;
+      const notionalPct = ((notional / cap) * 100).toFixed(1);
+      const ruinProb = Math.max(0.04, (riskPct / dailyLim) * sadroHaircut * 0.65).toFixed(2);
+
+      document.getElementById('outOptimalShares').textContent = `${shares.toLocaleString()} sh`;
+      document.getElementById('outNotionalExposure').textContent = `Notional: $${Math.round(notional).toLocaleString()} (${notionalPct}%)`;
+      document.getElementById('outRiskReward').textContent = `${rr} R`;
+      document.getElementById('outDollarRisk').textContent = `Max Loss: $${Math.round(shares * riskPerShare).toLocaleString()} (${((shares * riskPerShare / cap) * 100).toFixed(2)}%)`;
+      document.getElementById('outRuinProb').textContent = `${ruinProb}%`;
+
+      const ctx = document.getElementById('riskDistributionChart');
+      if (ctx) {
+        if (riskDistChart) riskDistChart.destroy();
+        const buckets = ['-4%', '-3%', '-2%', '-1%', '0%', '+1%', '+2%', '+3%', '+4%'];
+        const naiveKelly = [6, 12, 18, 22, 16, 12, 8, 4, 2];
+        const sadroTail = [0, 1, 5, 19, 28, 23, 14, 7, 3];
+        riskDistChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: buckets,
+            datasets: [
+              { label: 'SA-DRO Survivor-Aware Sizing (%)', data: sadroTail, backgroundColor: 'rgba(16, 185, 129, 0.75)', borderRadius: 6 },
+              { label: 'Unconstrained Kelly Sizing (%)', data: naiveKelly, backgroundColor: 'rgba(239, 68, 68, 0.45)', borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#CBD5E1', font: { family: 'JetBrains Mono', size: 10 } } } },
+            scales: {
+              x: { ticks: { color: '#94A3B8' }, grid: { display: false } },
+              y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(51, 65, 85, 0.25)' } }
+            }
+          }
+        });
+      }
+    }
+
+    function updateBlockSlicer() {
+      const shares = Number(document.getElementById('slicerOrderShares').value);
+      const mins = Number(document.getElementById('slicerHorizonMins').value);
+      const tox = Number(document.getElementById('slicerToxicity').value) / 100;
+
+      document.getElementById('valSlicerShares').textContent = `${shares.toLocaleString()} sh`;
+      document.getElementById('valSlicerHorizon').textContent = `${mins} min`;
+      document.getElementById('valSlicerToxicity').textContent = tox.toFixed(2);
+
+      const naiveBps = (8.5 + (shares / 25000) * 1.4 + tox * 6.5).toFixed(1);
+      const pdeBps = (2.1 + (shares / 60000) * 0.7 + tox * 2.2).toFixed(1);
+      const savedBps = (Number(naiveBps) - Number(pdeBps)).toFixed(1);
+      const refPrice = DESK_INSTRUMENTS[DESK_STATE.selectedSymbol]?.price || 142.80;
+      const savedUsd = Math.round(shares * refPrice * (Number(savedBps) / 10000));
+
+      document.getElementById('outNaiveSlip').textContent = `-${naiveBps} bps`;
+      document.getElementById('outPdeSlip').textContent = `-${pdeBps} bps`;
+      document.getElementById('outSlipSavings').textContent = `+$${savedUsd.toLocaleString()} (+${savedBps} bps)`;
+
+      const buckets = ['0-15m', '15-30m', '30-45m', '45-60m', '60-75m', '75-90m', '90-105m', '105-120m'];
+      const staticTwap = buckets.map(() => Math.round(shares / buckets.length));
+      const pdeWeights = [0.18, 0.21, 0.14, 0.08, 0.06, 0.09, 0.12, 0.12];
+      const pdeSlices = pdeWeights.map(w => Math.round(shares * w));
+
+      const ctx = document.getElementById('slicerScheduleChart');
+      if (ctx) {
+        if (slicerChart) slicerChart.destroy();
+        slicerChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: buckets,
+            datasets: [
+              { label: 'Boosi PDE-RL Adaptive Slices (Shares)', data: pdeSlices, backgroundColor: 'rgba(6, 182, 212, 0.8)', borderRadius: 6 },
+              { label: 'Static Linear TWAP (Shares)', data: staticTwap, backgroundColor: 'rgba(148, 163, 184, 0.35)', borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#CBD5E1', font: { family: 'JetBrains Mono', size: 10 } } } },
+            scales: {
+              x: { ticks: { color: '#94A3B8' }, grid: { display: false } },
+              y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(51, 65, 85, 0.25)' } }
+            }
+          }
+        });
+      }
+    }
+
+    function renderNostroLedger() {
+      const tbody = document.getElementById('nostroLedgerBody');
+      if (!tbody) return;
+      tbody.innerHTML = NOSTRO_LEDGER.map(r => `
+        <tr class="hover:bg-slate-800/50 transition">
+          <td class="py-2.5 px-3 text-slate-400">${r.time}</td>
+          <td class="py-2.5 px-3 font-bold text-white">${r.ticker}</td>
+          <td class="py-2.5 px-3 font-bold ${r.side === 'LONG' ? 'text-emerald-400' : 'text-rose-400'}">${r.side}</td>
+          <td class="py-2.5 px-3 text-cyan-300">${r.engine}</td>
+          <td class="py-2.5 px-3 text-white">${r.entry}</td>
+          <td class="py-2.5 px-3 text-slate-300">${r.stopTarget}</td>
+          <td class="py-2.5 px-3 text-amber-300">${r.size}</td>
+          <td class="py-2.5 px-3 font-bold ${r.win ? 'text-emerald-400' : 'text-rose-400'}">${r.status}</td>
+        </tr>
+      `).join('');
+    }
+
+    function switchDeskTab(tabId) {
+      DESK_STATE.activeTab = tabId;
+      document.querySelectorAll('.desk-panel-container').forEach(p => p.classList.add('hidden'));
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('.desk-tab-btn').forEach(btn => {
+        const t = btn.getAttribute('data-tab');
+        btn.className = t === tabId
+          ? 'desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+          : 'desk-tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent';
+      });
+
+      if (tabId === 'cockpit') updateCockpitView();
+      if (tabId === 'risk') updateNostroRiskSizer();
+      if (tabId === 'slicer') updateBlockSlicer();
+      if (tabId === 'journal') renderNostroLedger();
+      if (tabId === 'smartmoney') renderSmartMoneyTab();
+      if (tabId === 'commercial') updateCommercialRoi();
+    }
+
+    const SM_TRUMP_SCENARIOS = {
+      tariff: { label: 'Tariff Escalation (60% / 20%)', data: [-4.1, -6.5, +4.2, +5.8, -2.8, +7.9] },
+      dereg:  { label: 'FinTech & Crypto Reserve Deregulation', data: [+2.1, +3.6, +1.4, +2.5, +14.2, -2.2] },
+      taxcut: { label: '15% Domestic Corporate Tax Cut', data: [+4.8, +5.4, +3.9, +7.1, +4.0, -4.6] },
+      energy: { label: 'Energy Supply Expansion & Accord', data: [+5.2, +6.9, -1.2, +4.9, +6.1, -7.2] }
+    };
+    let activeSmTrump = 'tariff';
+    let smTrumpChartInst = null;
+
+    function renderSmartMoneyTab() {
+      const sym = DESK_STATE.selectedSymbol;
+      const d = DESK_INSTRUMENTS[sym] || DESK_INSTRUMENTS.NVDA;
+      document.getElementById('smActiveTickerBadge').textContent = sym;
+      const crowdVal = sym === 'TSLA' ? 16 : 24;
+      const expertVal = Math.min(96, crowdVal + d.boosiDelta);
+      document.getElementById('smCrowdScore').textContent = `${crowdVal} / 100`;
+      document.getElementById('smExpertScore').textContent = `${expertVal} / 100`;
+
+      const newsItems = [
+        { src: 'Institutional Wire', time: '1m ago', text: `${sym}: Top-decile analysts maintain long-term earnings targets while retail options put volume spikes`, tag: 'Expert Bullish' },
+        { src: 'Macro Catalyst', time: '3m ago', text: 'Tariff headline velocity pushes intraday VIX higher; Boosi PDE-RL model flags behavioral liquidity cascade', tag: 'Trump Signal' },
+        { src: '13F Smart Money', time: '6m ago', text: 'Quarterly institutional filings show net accumulation in high-FCF AI infrastructure & Berkshire-style compounders', tag: '13F Accumulation' },
+        { src: 'Order Flow Desk', time: '9m ago', text: `${sym}: Institutional VWAP absorption detected near -2σ Bollinger support`, tag: 'CYCLEX Spring' }
+      ];
+      document.getElementById('smBreakingNewsList').innerHTML = newsItems.map(n => `
+        <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex flex-col gap-1">
+          <div class="flex justify-between text-[10px] font-mono">
+            <span class="text-cyan-300 font-bold">${n.src} • ${n.time}</span>
+            <span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">${n.tag}</span>
+          </div>
+          <div class="text-slate-200">${n.text}</div>
+        </div>
+      `).join('');
+
+      const buffettRows = [
+        { ticker: 'AAPL', roic: '54.2%', fcf: '3.9%', moat: '98 / 100', verdict: 'Core Buffett Moat + PDE-RL Hold' },
+        { ticker: 'MSFT', roic: '31.8%', fcf: '3.2%', moat: '96 / 100', verdict: 'High Quality + Q-EWSS +87' },
+        { ticker: 'NVDA', roic: '68.4%', fcf: '2.8%', moat: '94 / 100', verdict: 'CYCLEX Spring Accumulation' },
+        { ticker: 'SPY',  roic: '19.5%', fcf: '4.1%', moat: '90 / 100', verdict: 'Statistical Patience Baseline' }
+      ];
+      document.getElementById('buffettTableBody').innerHTML = buffettRows.map(r => `
+        <tr>
+          <td class="py-2 px-2 font-bold text-white">${r.ticker}</td>
+          <td class="py-2 px-2 text-emerald-400">${r.roic}</td>
+          <td class="py-2 px-2 text-cyan-300">${r.fcf}</td>
+          <td class="py-2 px-2 text-amber-300 font-bold">${r.moat}</td>
+          <td class="py-2 px-2 text-slate-200">${r.verdict}</td>
+        </tr>
+      `).join('');
+
+      const hfRows = [
+        { fund: 'Berkshire / Value Compounders', top: 'AAPL, Energy, T-Bills', shift: '+4.2% Cash Buffer', align: 'High Margin of Safety' },
+        { fund: 'Multi-Manager Quant Pods', top: 'NVDA, MSFT, Semis', shift: '+12.4% Net Long', align: 'PRISM + Q-EWSS Aligned' },
+        { fund: 'Global Macro Discretionary', top: 'BTC, Defense, USD', shift: '+8.1% Policy Hedge', align: 'Trump Market Signal™' },
+        { fund: 'Event-Driven & Vol Funds', top: 'SPY Gamma, Industrials', shift: '+6.5% Long Convexity', align: 'SA-DRO Tail-Protected' }
+      ];
+      document.getElementById('hedgeFund13fBody').innerHTML = hfRows.map(h => `
+        <tr>
+          <td class="py-2 px-2 font-bold text-white">${h.fund}</td>
+          <td class="py-2 px-2 text-cyan-300">${h.top}</td>
+          <td class="py-2 px-2 text-emerald-400">${h.shift}</td>
+          <td class="py-2 px-2 text-amber-300">${h.align}</td>
+        </tr>
+      `).join('');
+
+      const btnBox = document.getElementById('smTrumpButtons');
+      btnBox.innerHTML = Object.keys(SM_TRUMP_SCENARIOS).map(k => `
+        <button type="button" data-sm-t="${k}" class="sm-trump-btn p-2 rounded-lg text-left text-xs font-mono border transition ${activeSmTrump === k ? 'bg-amber-500/20 text-amber-300 border-amber-400 font-bold' : 'bg-slate-950 text-slate-300 border-slate-800'}">
+          ${SM_TRUMP_SCENARIOS[k].label}
+        </button>
+      `).join('');
+
+      btnBox.querySelectorAll('.sm-trump-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          activeSmTrump = b.getAttribute('data-sm-t') || 'tariff';
+          renderSmartMoneyTab();
+        });
+      });
+
+      const ctx = document.getElementById('smTrumpChart');
+      if (ctx) {
+        if (smTrumpChartInst) smTrumpChartInst.destroy();
+        const vals = SM_TRUMP_SCENARIOS[activeSmTrump].data;
+        smTrumpChartInst = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['SPY', 'NVDA/Semis', 'Defense', 'US Industrials', 'BTC', 'VIX'],
+            datasets: [{
+              label: '5-Day Impulse (%)',
+              data: vals,
+              backgroundColor: vals.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(239, 68, 68, 0.75)'),
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: '#CBD5E1', font: { size: 10 } }, grid: { display: false } },
+              y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(51, 65, 85, 0.25)' } }
+            }
+          }
+        });
+      }
+    }
+
+    function updateCommercialRoi() {
+      const aumM = Number(document.getElementById('sliderCommAum').value);
+      const seats = Number(document.getElementById('sliderCommSeats').value);
+      const bps = Number(document.getElementById('sliderCommBps').value);
+
+      document.getElementById('valCommAum').textContent = `$${aumM}M AUM`;
+      document.getElementById('valCommSeats').textContent = `${seats} Seats`;
+      document.getElementById('valCommBps').textContent = `+${bps} bps/yr`;
+
+      const grossVal = Math.round(aumM * 1000000 * (bps / 10000));
+      const annualCost = seats <= 1 ? 199 * 12 : seats <= 10 ? 1490 * 12 : 2490 * 12;
+      const roi = (grossVal / annualCost).toFixed(1);
+
+      document.getElementById('outCommGrossValue').textContent = `+$${grossVal.toLocaleString()} / yr`;
+      document.getElementById('outCommLicenseCost').textContent = `$${annualCost.toLocaleString()} / yr`;
+      document.getElementById('outCommRoiMult').textContent = `${roi}x ROI`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      syncLiveCrypto();
+      renderDeskTapeAndButtons();
+      updateCockpitView();
+      updateNostroRiskSizer();
+      updateBlockSlicer();
+      renderNostroLedger();
+
+      // Auto-update loop every 3 seconds
+      setInterval(() => {
+        if (!DESK_STATE.liveRunning) return;
+        Object.keys(DESK_INSTRUMENTS).forEach(sym => {
+          const item = DESK_INSTRUMENTS[sym];
+          const jitter = (Math.random() - 0.49) * (item.price * 0.0011);
+          item.price = Number((item.price + jitter).toFixed(item.price >= 1000 ? 0 : 2));
+          item.rsi = Math.max(15, Math.min(85, Number((item.rsi + (jitter >= 0 ? 0.2 : -0.2)).toFixed(1))));
+        });
+        document.getElementById('deskClock').textContent = new Date().toLocaleTimeString();
+        renderDeskTapeAndButtons();
+        if (DESK_STATE.activeTab === 'cockpit') updateCockpitView();
+      }, 3000);
+
+      setInterval(() => {
+        if (DESK_STATE.liveRunning) syncLiveCrypto();
+      }, 25000);
+
+      document.querySelectorAll('.desk-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = btn.getAttribute('data-tab');
+          if (t) switchDeskTab(t);
+        });
+      });
+
+      document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          DESK_STATE.timeframe = btn.getAttribute('data-tf') || '15m';
+          document.querySelectorAll('.tf-btn').forEach(b => b.className = 'tf-btn px-2.5 py-1 rounded text-slate-400 hover:text-white');
+          btn.className = 'tf-btn px-2.5 py-1 rounded bg-cyan-500 text-slate-950 font-bold';
+          updateCockpitView();
+        });
+      });
+
+      document.getElementById('deskPauseBtn').addEventListener('click', () => {
+        DESK_STATE.liveRunning = !DESK_STATE.liveRunning;
+        const b = document.getElementById('deskPauseBtn');
+        b.textContent = DESK_STATE.liveRunning ? '⏸ Live Sync ON' : '▶ Live Sync PAUSED';
+        showDeskToast(DESK_STATE.liveRunning ? 'Live Desk Telemetry Resumed' : 'Live Desk Telemetry Paused');
+      });
+
+      document.getElementById('deskLangBtn').addEventListener('click', () => {
+        DESK_STATE.lang = DESK_STATE.lang === 'en' ? 'he' : 'en';
+        const isHe = DESK_STATE.lang === 'he';
+        document.documentElement.dir = isHe ? 'rtl' : 'ltr';
+        document.getElementById('deskBrandSubtitle').textContent = isHe
+          ? 'קוקפיט מסחר, ביצוע וניהול סיכונים לסוחרי נוסטרו, דסקים וקרנות גידור • מחקר מאת רועי בוסי'
+          : 'Institutional Execution, Technical Microstructure & Risk Cockpit • Research by Roee Boosi';
+        showDeskToast(isHe ? 'עברית (RTL) הופעלה' : 'English (LTR) Activated');
+      });
+
+      document.getElementById('sendTicketToRiskSizerBtn').addEventListener('click', () => {
+        const d = DESK_INSTRUMENTS[DESK_STATE.selectedSymbol] || DESK_INSTRUMENTS.NVDA;
+        const stopDist = d.atr * 1.5;
+        document.getElementById('riskEntryPrice').value = d.price.toFixed(2);
+        document.getElementById('riskStopPrice').value = (d.price - stopDist).toFixed(2);
+        document.getElementById('riskTargetPrice').value = (d.price + stopDist * 2.8).toFixed(2);
+        switchDeskTab('risk');
+        showDeskToast(`Loaded ${DESK_STATE.selectedSymbol} levels into SA-DRO Nostro Risk Sizer!`);
+      });
+
+      document.getElementById('logTicketToJournalBtn').addEventListener('click', () => {
+        const d = DESK_INSTRUMENTS[DESK_STATE.selectedSymbol] || DESK_INSTRUMENTS.NVDA;
+        const stopDist = d.atr * 1.5;
+        NOSTRO_LEDGER.unshift({
+          time: 'Just Now',
+          ticker: DESK_STATE.selectedSymbol,
+          side: 'LONG',
+          engine: 'Q-EWSS + CYCLEX Spring',
+          entry: fmtP(d.price),
+          stopTarget: `${fmtP(d.price - stopDist)} / ${fmtP(d.price + stopDist * 2.8)}`,
+          size: 'SA-DRO Sized',
+          status: 'ACTIVE SETUP',
+          win: true
+        });
+        switchDeskTab('journal');
+        showDeskToast(`Logged ${DESK_STATE.selectedSymbol} trade setup to Nostro Performance Ledger!`);
+      });
+
+      ['riskAccountSize', 'riskPerTradePct', 'riskDailyLimitPct', 'riskEntryPrice', 'riskStopPrice', 'riskTargetPrice', 'riskSadroSlider'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateNostroRiskSizer);
+      });
+
+      ['slicerOrderShares', 'slicerHorizonMins', 'slicerToxicity'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateBlockSlicer);
+      });
+
+      ['sliderCommAum', 'sliderCommSeats', 'sliderCommBps'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCommercialRoi);
+      });
+
+      document.querySelectorAll('.comm-plan-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById('deskLicenseModal').classList.remove('hidden');
+        });
+      });
+
+      renderSmartMoneyTab();
+      updateCommercialRoi();
+
+      document.getElementById('openDeskLicenseModalBtn').addEventListener('click', () => {
+        document.getElementById('deskLicenseModal').classList.remove('hidden');
+      });
+      document.getElementById('closeDeskLicenseModalBtn').addEventListener('click', () => {
+        document.getElementById('deskLicenseModal').classList.add('hidden');
+      });
+      document.getElementById('submitDeskLicenseBtn').addEventListener('click', () => {
+        const email = document.getElementById('deskLicEmail').value.trim();
+        if (!email) {
+          showDeskToast('Please enter your desk email address.');
+          return;
+        }
+        document.getElementById('deskLicenseModal').classList.add('hidden');
+        showDeskToast(`Institutional Desk License inquiry sent for ${email}!`);
+      });
+    });
+  </script>
+</body>
+</html>
